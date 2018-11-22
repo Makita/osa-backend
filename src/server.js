@@ -14,12 +14,6 @@ app.get('/appointments/:date', (req, res) => {
     res.status(200).send(rows);
   });
 });
-app.get('/appointments', (req, res) => {
-  console.log("Received [GET] /appointments");
-  Appointment.allAfterToday((rows) => {
-    res.status(200).send(rows);
-  });
-});
 
 app.post('/appointment', (req, res) => {
   console.log("Received [POST] /appointment");
