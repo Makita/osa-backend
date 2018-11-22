@@ -1,0 +1,17 @@
+{
+  "name": "osa-backend",
+  "version": "1.0.0",
+  "description": "Back-end for OSA site.",
+  "main": "src/server.js",
+  "repository": "git@github.com:Makita/osa-backend.git",
+  "author": "Makita <justin.choi.000@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.16.4",
+    "sqlite3": "^4.0.4"
+  },
+  "scripts": {
+    "start:dev": "node src/server.js"
+  }
+}
