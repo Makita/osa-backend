@@ -76,7 +76,7 @@ module.exports = class Appointment {
    * @param {(row) => void} callback A callback function just to use for when the query finishes.
    */
   static onDate(date, callback) {
-    db.all(`SELECT id, first_name, last_name, start_time, end_time
+    db.all(`SELECT rowid, first_name, last_name, start_time, end_time
     FROM appointments
     WHERE DATE(start_time) = DATE(?);`,
     [date],
@@ -85,7 +85,7 @@ module.exports = class Appointment {
         console.log("Error:", err);
       } else {
         console.log(`> ${blue}Appointment${reset}.${rust}onDate(${red}"${date}"${reset}${rust})
-${red}SELECT ${blue}id${red}, ${blue}first_name${red}, ${blue}last_name${red}, ${blue}start_time${red}, ${blue}end_time${red} FROM ${blue}appointments ${red}WHERE DATE(${blue}start_time${red}) = DATE(${blue}"${date}"${red});
+${red}SELECT ${blue}rowid${red}, ${blue}first_name${red}, ${blue}last_name${red}, ${blue}start_time${red}, ${blue}end_time${red} FROM ${blue}appointments ${red}WHERE DATE(${blue}start_time${red}) = DATE(${blue}"${date}"${red});
 ${reset}Found ${rows.length} rows.`);
       }
       callback(rows);
