@@ -93,6 +93,28 @@ ${reset}Found ${rows.length} rows.`);
   }
 
   /**
+   * Like onDate but with all the fields.
+   * @param {string} date An ISO 8601-compliant time string.
+   * @param {(row) => void} callback A callback function just to use for when the query finishes.
+   */
+  static onDateAllData(date, callback) {
+    db.all(`SELECT rowid, first_name, last_name, phone_number, services, start_time, end_time
+    FROM appointments
+    WHERE DATE(start_time) = DATE(?);`,
+    [date],
+    (err, rows) => {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log(`> ${blue}Appointment${reset}.${rust}onDate(${red}"${date}"${reset}${rust})
+${red}SELECT ${blue}rowid${red}, ${blue}first_name${red}, ${blue}last_name${red}, ${blue}phone_number${red}, ${blue}services${red}, ${blue}start_time${red}, ${blue}end_time${red} FROM ${blue}appointments ${red}WHERE DATE(${blue}start_time${red}) = DATE(${blue}"${date}"${red});
+${reset}Found ${rows.length} rows.`);
+      }
+      callback(rows);
+    });
+  }
+
+  /**
    * Validates whether each field is populated and valid or not.
    */
   validations() {
