@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database('database.sqlite3');
+const addMinutes = require('date-fns/add_minutes');
 const startOfDay = require('date-fns/start_of_day');
 const endOfDay = require('date-fns/end_of_day');
 const areRangesOverlapping = require('date-fns/are_ranges_overlapping');
@@ -154,7 +155,7 @@ ${reset}Found ${rows.length} rows.`);
    * @param {string} callback A callback that's basically just to say that stuff happened correctly.
    */
   create(res, callback) {
-    const services = this.services.split(/,\s*/gu).replace(/\s/gu, '_');
+    const services = this.services.split(/,\s*/gu).map(service => service.replace(/\s/gu, '_'));
     this.end_time = this.start_time;
 
     for (let i = 0; i < SERVICES.length; i++) {
