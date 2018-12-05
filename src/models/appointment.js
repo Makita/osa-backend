@@ -1,9 +1,11 @@
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database('database.sqlite3');
+
 const addMinutes = require('date-fns/add_minutes');
-const startOfDay = require('date-fns/start_of_day');
-const endOfDay = require('date-fns/end_of_day');
 const areRangesOverlapping = require('date-fns/are_ranges_overlapping');
+const endOfDay = require('date-fns/end_of_day');
+const format = require('date-fns/format');
+const startOfDay = require('date-fns/start_of_day');
 
 const SERVICES = require('../resources/services');
 
@@ -156,16 +158,18 @@ ${reset}Found ${rows.length} rows.`);
    */
   create(res, callback) {
     const services = this.services.split(/,\s*/gu).map(service => service.replace(/\s/gu, '_'));
-    this.end_time = this.start_time;
+    let endTime = new Date(this.start_time);
 
     for (let i = 0; i < SERVICES.length; i++) {
       for (let a = 0; a < services.length; a++) {
         if (services[a] === SERVICES[i].slug) {
-          this.end_time = addMinutes(this.end_time, SERVICES[i].time);
+          endTime = addMinutes(endTime, SERVICES[i].time);
         }
       }
     }
-    
+
+    this.end_time = format(endTime);
+
     this.validations();
     console.log("Validations all passed.")
 
