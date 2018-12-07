@@ -20,13 +20,19 @@ module.exports = class Appointment {
    * @param {string} firstName Client's first name.
    * @param {string} lastName Client's last name.
    * @param {string} phoneNumber Client's phone number in the format XXX-XXX-XXXX.
+   * @param {string} make The make of the vehicle.
+   * @param {string} model The model of the vehicle.
+   * @param {string} year The year of the vehicle.
    * @param {string} services Services with underscores, separated by commas.
    * @param {string} startTime ISO 8601 representation of when this appointment starts.
    */
-  constructor(firstName, lastName, phoneNumber, services, startTime, endTime) {
+  constructor(firstName, lastName, phoneNumber, make, model, year, services, startTime, endTime) {
     this.first_name   = firstName;
     this.last_name    = lastName;
     this.phone_number = phoneNumber;
+    this.make         = make;
+    this.model        = model;
+    this.year         = year;
     this.services     = services;
     this.start_time   = startTime;
   }
@@ -39,6 +45,9 @@ module.exports = class Appointment {
       first_name VARCHAR(100) NOT NULL,
       last_name VARCHAR(100) NOT NULL,
       phone_number VARCHAR(20) NOT NULL,
+      make VARCHAR(50) NOT NULL,
+      model VARCHAR(100) NOT NULL,
+      year VARCHAR(5) NOT NULL,
       services TEXT NOT NULL,
       start_time TEXT NOT NULL,
       end_time TEXT NOT NULL
@@ -59,16 +68,21 @@ module.exports = class Appointment {
   }
 
   /**
-   * Returns every appointment after the current day.
+   * Returns every appointment on and after the current day.
    * @param {(rows) => void} callback A callback function just to use for when the query finishes.
    */
-  static allAfterToday(callback) {
-    db.all(`SELECT first_name, last_name, phone_number, services, start_time, end_time
+  static allUpcoming(callback) {
+    db.all(`SELECT rowid, first_name, last_name, phone_number, make, model, year, services, start_time, end_time
     FROM appointments
-    WHERE start_time >= date('now', 'localtime', '+1 day');`,
+    WHERE DATE(start_time) >= DATE('now', 'localtime');`,
     (err, rows) => {
-      if (err) console.log("Error:", err);
-      else console.log("Appointment.allAfterToday() call successful.");
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log(`> ${blue}Appointment${reset}.${rust}allUpcoming()
+${red}SELECT ${blue}rowid${red}, ${blue}first_name${red}, ${blue}last_name${red}, ${blue}phone_number${red}, ${blue}make${red}, ${blue}model${red}, ${blue}year${red}, ${blue}services${red}, ${blue}start_time${red}, ${blue}end_time${red} FROM ${blue}appointments ${red}WHERE DATE(${blue}start_time${red}) >= DATE(${blue}'now'${red}, ${blue}'localtime'${red});
+${reset}Found ${rows.length} rows.`);
+      }
       callback(rows);
     });
   }
@@ -124,6 +138,9 @@ ${reset}Found ${rows.length} rows.`);
     this.validates_existence_of("first_name");
     this.validates_existence_of("last_name");
     this.validates_existence_of("phone_number");
+    this.validates_existence_of("make");
+    this.validates_existence_of("model");
+    this.validates_existence_of("year");
     this.validates_existence_of("services");
     this.validates_existence_of("start_time");
 
@@ -176,8 +193,8 @@ ${reset}Found ${rows.length} rows.`);
     const that = this;
 
     db.run(
-      "INSERT INTO appointments (first_name, last_name, phone_number, services, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?)",
-      [this.first_name, this.last_name, this.phone_number, this.services, this.start_time, this.end_time],
+      "INSERT INTO appointments (first_name, last_name, phone_number, make, model, year, services, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [this.first_name, this.last_name, this.phone_number, this.make, this.model, this.year, this.services, this.start_time, this.end_time],
       function(err) {
         if (err) {
           console.log("Error:", err);

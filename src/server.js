@@ -1,4 +1,5 @@
 const express = require('express');
+const compareAsc = require('date-fns/compare_asc');
 const format = require('date-fns/format');
 
 const app = express();
@@ -26,6 +27,9 @@ app.post('/appointment', (req, res) => {
     req.body.first_name,
     req.body.last_name,
     req.body.phone_number,
+    req.body.make,
+    req.body.model,
+    req.body.year,
     req.body.services,
     req.body.start_time
   );
@@ -35,31 +39,23 @@ app.post('/appointment', (req, res) => {
   });
 });
 
-app.get('/view_all_appointments_today', (req, res) => {
-  Appointment.onDateAllData(new Date().toISOString(), (rows) => {
-    const tableRows = rows.map((row) => {
-      return `
-        <tr>
-          <th scope="row">${row.rowid}</th>
-          <td>${row.first_name}</td>
-          <td>${row.last_name}</td>
-          <td>${row.phone_number}</td>
-          <td>${row.services.replace(/_/gu, ' ')}</td>
-          <td>${format(row.start_time, 'hh:mm A')}</td>
-          <td>${format(row.end_time, 'hh:mm A')}
-        </tr>
-      `;
-    });
+app.get('/view_all_upcoming_appointments', (req, res) => {
+  Appointment.allUpcoming((rows) => {
+    const appointmentsByDate = {};
 
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`
-      <html>
-        <head>
-          <title>Today's Appointments</title>
-          <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-        </head>
-        <body class="p-3 bg-dark">
-          <h2 class="text-white">${format(new Date(), 'MMMM DD, YYYY')}</h2>
+    for(let i = 0; i < rows.length; i++) {
+      const appointment = rows[i];
+      const date = format(appointment.start_time, 'MMMM DD, YYYY');
+      appointmentsByDate[date] = appointmentsByDate[date] || [];
+
+      appointmentsByDate[date].push(appointment);
+    }
+
+    const dates = Object.keys(appointmentsByDate).sort(compareAsc);
+
+    const tables = dates.map((date) => {
+      let table = `
+        <h2 class="text-white">${date}</h2>
           <table class="table table-dark table-hover">
             <thead>
               <tr>
@@ -67,15 +63,48 @@ app.get('/view_all_appointments_today', (req, res) => {
                 <th scope="col">First Name</th>
                 <th scope="col">Last Name</th>
                 <th scope="col">Phone Number</th>
+                <th scope="col">Vehicle</th>
                 <th scope="col">Services</th>
                 <th scope="col">Start Time</th>
                 <th scope="col">End Time</th>
               </tr>
             </thead>
             <tbody>
-              ${tableRows}
+      `;
+
+      table = table + appointmentsByDate[date].map((appointment) => {
+        // const offset = Number(appointment.start_time.slice(23, 26));
+        // const endTime = new Date(appointment.end_time).getTime() + (offset * 60 * 60 * 1000);
+
+        return `
+              <tr>
+                <th scope="row">${appointment.rowid}</th>
+                <td>${appointment.first_name}</td>
+                <td>${appointment.last_name}</td>
+                <td>${appointment.phone_number}</td>
+                <td>${appointment.year} ${appointment.make} ${appointment.model}</td>
+                <td>${appointment.services.replace(/_/gu, ' ').replace(/,/gu, ', ')}</td>
+                <td>${format(appointment.start_time, 'hh:mm A')}</td>
+                <td>${format(appointment.end_time, 'hh:mm A')}</td>
+              </tr>
+        `;
+      }).join('');
+
+      return table + `
             </tbody>
           </table>
+      `;
+    }).join('');
+
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+      <html>
+        <head>
+          <title>Upcoming Appointments</title>
+          <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        </head>
+        <body class="p-3 bg-dark">
+          ${tables}
         </body>
       </html>
     `)
